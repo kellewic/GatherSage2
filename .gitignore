@@ -39,3 +39,13 @@ luac.out
 *.x86_64
 *.hex
 
+# Compiled Python files
+*.pyo
+*.pyc
+
+# Python test files
+.coverage
+test.py
+**/__pycache__
+htmlcov/
+

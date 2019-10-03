@@ -1,20 +1,21 @@
 #!/usr/bin/env python3
 
 import json, operator, random, re, requests, sys, time
+from datetime import datetime
 from functools import reduce
-from jinja2 import Environment, PackageLoader, select_autoescape
+from jinja2 import Environment, FileSystemLoader
+
+item_cache = {}
 
 PAUSE_MIN = 1
 PAUSE_MAX = 3
 
-jinja_env = Environment()
-
-template = jinja_env.get_template('mining.lua')
-
-
-sys.exit()
+jinja_env = Environment(
+    loader=FileSystemLoader('templates')        
+)
 
 ID_TO_NAME_KEY = "__id_to_name"
+ALL_NAMES_KEY = "__all_names"
 MINING_LABEL = "Chance of"
 
 WH_MINING_GUIDE_URL = "https://classic.wowhead.com/guides/mining-classic-wow-1-300"
@@ -25,10 +26,26 @@ WH_MINING_NODE_NAME_KEY = "name_enus"
 
 addon_data = {
     "mining": {
-        ID_TO_NAME_KEY: {}
+        ID_TO_NAME_KEY: {},
+        ALL_NAMES_KEY: {},
     }
 }
 mining_data = addon_data["mining"]
+
+def in_cache(item):
+    if item in item_cache:
+        return True
+    else:
+        return False
+
+def add_to_cache(item, val=True):
+    item_cache[item] = val
+
+def get_from_cache(item):
+    if in_cache(item):
+        return item_cache[item]
+    else:
+        return None
 
 def sleep():
     time.sleep(random.randint(PAUSE_MIN, PAUSE_MAX))
@@ -48,6 +65,7 @@ def get_html_data(url):
         return None
 
     return response.text
+
 
 html = get_html_data(WH_MINING_GUIDE_URL)
 if html is None: sys.exit(1)
@@ -96,34 +114,67 @@ for data in re.findall("\[h3\].*?(?=(?:\[h3\])|$)", object_data):
     item_ids = list(filter(None, reduce(operator.concat, item_ids)))
 
     for name in node_names:
-        obj = mining_data.setdefault(name, [skills, "1", MINING_LABEL])
+        mining_data[ALL_NAMES_KEY][name] = True
 
-        count = 1
+        mining_data[name] = {
+            "skills": skills.split(","),
+            "color": "1",
+            "label": MINING_LABEL,
+            "items": []
+        }
+
         for item_id in item_ids:
-            html = get_html_data(WH_MINING_ITEM_URL.format(item_id))
-            if html is None:
-                write_error("No data for item_id {}\n".format(item_id))
-                continue
+            if in_cache(item_id):
+                item_data = get_from_cache(item_id)
+                info_label = "From Cache"
 
-            m = re.search('WH.Gatherer.addData\(3, 4,.*?"{}".*?name_enus":"(.*?)".*?quality":(\d+)'.format(item_id), html)
-            if m is None: continue
+            else:
+                html = get_html_data(WH_MINING_ITEM_URL.format(item_id))
+                if html is None:
+                    write_error("No data for item_id {}\n".format(item_id))
+                    continue
 
-            item_name = m.group(1)
-            color = m.group(2)
-            obj.append([item_name, color, MINING_LABEL])
+                m = re.search('WH.Gatherer.addData\(3, 4,.*?"{}".*?name_enus":"(.*?)".*?quality":(\d+)'.format(item_id), html)
+                if m is None: continue
 
-            write_info("Processing {} -> {}={}\n".format(name, item_name, color))
+                item_name = m.group(1)
+                color = m.group(2)
+                info_label = "Processing"
 
-            ## Don't hammer wowhead with requests
-            if count < len(item_ids):
+                item_data = {
+                    "name": item_name,
+                    "color": color,
+                    "label": MINING_LABEL
+                }
+
+                add_to_cache(item_id, item_data)
+
+                ## Don't hammer wowhead with requests
                 sleep()
-            count += 1
 
+            mining_data[name]["items"].append(item_data)
+
+            item_name = item_data["name"]
+            mining_data[ALL_NAMES_KEY][item_name] = True
+            write_info("{} {} -> {}={}\n".format(info_label, name, item_name, color))
+
+        sorted_items = sorted(mining_data[name]["items"], key = lambda i: "{}{}".format(i['color'], i['name']))
+        mining_data[name]["items"] = sorted_items
+
+        if name == "Tin Vein":
+            break
+    if "Tin Vein" in node_names:
         break
-    break
+
+## Create locale lua file
+locale_template = jinja_env.get_template('locales/enUS/mining.lua')
+locale_template.stream(pull_time=datetime.now(), items=sorted(mining_data[ALL_NAMES_KEY].keys())).dump('output_locales/enUS/mining.lua')
 
 del mining_data[ID_TO_NAME_KEY]
+del mining_data[ALL_NAMES_KEY]
 
-print(json.dumps(addon_data, indent=3, separators=(',', ':')))
+module_template = jinja_env.get_template('gather_modules/Mining.lua')
+module_template.stream(pull_time=datetime.now(), items=mining_data).dump('output_gather_modules/Mining.lua')
 
+#print(json.dumps(addon_data, indent=3, separators=(',', ':')))
 

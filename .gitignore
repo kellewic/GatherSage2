@@ -1,3 +1,6 @@
+## Custom for project
+**/output_*
+
 # Compiled Lua sources
 luac.out
 

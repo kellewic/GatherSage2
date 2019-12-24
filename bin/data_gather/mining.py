@@ -1,73 +1,31 @@
 #!/usr/bin/env python3
 
-import json, operator, random, re, requests, sys, time
+import json, operator, re, requests, sys
 from datetime import datetime
 from functools import reduce
-from jinja2 import Environment, FileSystemLoader
 
-item_cache = {}
+from core import create_locale_lua, create_module_lua, get_item_cache, in_cache, add_to_cache, get_from_cache, sleep, write_info, write_error, get_html_data
+from core import PAUSE_MIN, PAUSE_MAX, ID_TO_NAME_KEY, ALL_NAMES_KEY
 
-PAUSE_MIN = 1
-PAUSE_MAX = 3
+locale_template_file = 'enUS/mining.lua'
+module_template_file = 'Mining.lua'
 
-jinja_env = Environment(
-    loader=FileSystemLoader('templates')        
-)
+item_cache = get_item_cache()
 
-ID_TO_NAME_KEY = "__id_to_name"
-ALL_NAMES_KEY = "__all_names"
-MINING_LABEL = "Chance of"
+LABEL = "Chance of"
 
-WH_MINING_GUIDE_URL = "https://classic.wowhead.com/guides/mining-classic-wow-1-300"
-WH_MINING_ITEM_URL = "https://classic.wowhead.com/item={}"
+GUIDE_URL = "https://classic.wowhead.com/guides/mining-classic-wow-1-300"
+DATA_URL = "https://classic.wowhead.com/item={}"
 WH_MINING_NODE_ID_ENDINGS = ["vein", "deposit", "chunk"]
 WH_MINING_ITEM_TYPES = ["ore", "stone", "gems"]
 WH_MINING_NODE_NAME_KEY = "name_enus"
 
 addon_data = {
-    "mining": {
-        ID_TO_NAME_KEY: {},
-        ALL_NAMES_KEY: {},
-    }
+    ID_TO_NAME_KEY: {},
+    ALL_NAMES_KEY: {},
 }
-mining_data = addon_data["mining"]
 
-def in_cache(item):
-    if item in item_cache:
-        return True
-    else:
-        return False
-
-def add_to_cache(item, val=True):
-    item_cache[item] = val
-
-def get_from_cache(item):
-    if in_cache(item):
-        return item_cache[item]
-    else:
-        return None
-
-def sleep():
-    time.sleep(random.randint(PAUSE_MIN, PAUSE_MAX))
-
-def write_info(msg):
-    sys.stdout.write("INF: {}".format(msg))
-
-def write_error(msg):
-    sys.stderr.write("ERR: {}".format(msg))
-
-def get_html_data(url):
-    response = requests.get(url)
-    code = response.status_code
-
-    if code != 200:
-        write_error("Received {:d} HTTP code\n".format(code))
-        return None
-
-    return response.text
-
-
-html = get_html_data(WH_MINING_GUIDE_URL)
+html = get_html_data(GUIDE_URL)
 if html is None: sys.exit(1)
 
 ## Find all the mining node names and their IDs
@@ -83,7 +41,7 @@ if base_objects:
         obj_name = v[WH_MINING_NODE_NAME_KEY]
 
         if re.search("(?i)({})$".format("|".join(WH_MINING_NODE_ID_ENDINGS)), obj_name):
-            mining_data[ID_TO_NAME_KEY][obj_id] = obj_name
+            addon_data[ID_TO_NAME_KEY][obj_id] = obj_name
 
 ## Get all the items a given node can produce along with their IDs
 object_data = re.search(r'recorded spawn locations\.(?:\\[nr])+(.*?)(?:\\[nr])+\[br\](?:\\[nr])+\[h2\]Smelting Ore', html)
@@ -96,7 +54,7 @@ for data in re.findall("\[h3\].*?(?=(?:\[h3\])|$)", object_data):
     m = re.search("(?i)\[b\]Mineral (?:{})s?:\[/b\]\s*(.*?)\s*\[b\]".format("|".join(WH_MINING_NODE_ID_ENDINGS)), data)
     if m is None: continue
     node_ids = re.sub("[^\d,]", "", m.group(1)).split(",")
-    node_names = list(map(lambda node_id: mining_data[ID_TO_NAME_KEY][node_id], node_ids))
+    node_names = list(map(lambda node_id: addon_data[ID_TO_NAME_KEY][node_id], node_ids))
 
     ## Node ore mining difficulties
     m = re.search("\[color=r1\](\d+).*?\[color=r2\](\d+).*?\[color=r3\](\d+).*?\[color=r4\](\d+)", data)
@@ -114,12 +72,12 @@ for data in re.findall("\[h3\].*?(?=(?:\[h3\])|$)", object_data):
     item_ids = list(filter(None, reduce(operator.concat, item_ids)))
 
     for name in node_names:
-        mining_data[ALL_NAMES_KEY][name] = True
+        addon_data[ALL_NAMES_KEY][name] = True
 
-        mining_data[name] = {
+        addon_data[name] = {
             "skills": skills.split(","),
             "color": "1",
-            "label": MINING_LABEL,
+            "label": LABEL,
             "items": []
         }
 
@@ -129,7 +87,7 @@ for data in re.findall("\[h3\].*?(?=(?:\[h3\])|$)", object_data):
                 info_label = "From Cache"
 
             else:
-                html = get_html_data(WH_MINING_ITEM_URL.format(item_id))
+                html = get_html_data(DATA_URL.format(item_id))
                 if html is None:
                     write_error("No data for item_id {}\n".format(item_id))
                     continue
@@ -144,7 +102,7 @@ for data in re.findall("\[h3\].*?(?=(?:\[h3\])|$)", object_data):
                 item_data = {
                     "name": item_name,
                     "color": color,
-                    "label": MINING_LABEL
+                    "label": LABEL
                 }
 
                 add_to_cache(item_id, item_data)
@@ -152,29 +110,24 @@ for data in re.findall("\[h3\].*?(?=(?:\[h3\])|$)", object_data):
                 ## Don't hammer wowhead with requests
                 sleep()
 
-            mining_data[name]["items"].append(item_data)
+            addon_data[name]["items"].append(item_data)
 
             item_name = item_data["name"]
-            mining_data[ALL_NAMES_KEY][item_name] = True
+            addon_data[ALL_NAMES_KEY][item_name] = True
             write_info("{} {} -> {}={}\n".format(info_label, name, item_name, color))
 
-        sorted_items = sorted(mining_data[name]["items"], key = lambda i: "{}{}".format(i['color'], i['name']))
-        mining_data[name]["items"] = sorted_items
+        sorted_items = sorted(addon_data[name]["items"], key = lambda i: "{}{}".format(i['color'], i['name']))
+        addon_data[name]["items"] = sorted_items
 
-        if name == "Tin Vein":
-            break
-    if "Tin Vein" in node_names:
-        break
+#        if name == "Tin Vein":
+#            break
+#    if "Tin Vein" in node_names:
+#        break
 
-## Create locale lua file
-locale_template = jinja_env.get_template('locales/enUS/mining.lua')
-locale_template.stream(pull_time=datetime.now(), items=sorted(mining_data[ALL_NAMES_KEY].keys())).dump('output_locales/enUS/mining.lua')
 
-del mining_data[ID_TO_NAME_KEY]
-del mining_data[ALL_NAMES_KEY]
+create_locale_lua(locale_template_file, addon_data[ALL_NAMES_KEY].keys())
+del addon_data[ID_TO_NAME_KEY]
+del addon_data[ALL_NAMES_KEY]
+create_module_lua(module_template_file, addon_data)
 
-module_template = jinja_env.get_template('gather_modules/Mining.lua')
-module_template.stream(pull_time=datetime.now(), items=mining_data).dump('output_gather_modules/Mining.lua')
-
-#print(json.dumps(addon_data, indent=3, separators=(',', ':')))
 

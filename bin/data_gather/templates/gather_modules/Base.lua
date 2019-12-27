@@ -9,7 +9,6 @@ local data = {% raw -%}{{%- endraw -%}{% for k, v in items.items() %}
         {% raw -%}{{%- endraw -%}{%- for s in v.skills -%}
             "{{s}}"{%- if not loop.last %}, {% endif -%}
         {%- endfor -%}{%- raw -%}},{%- endraw %}
-        "{{ v["color"] }}",
         L["{{ v["label"] }}"],
     {%- for i in v["items"] %}
         {% raw -%}{{%- endraw -%}L["{{ i.name }}"], "{{ i.color }}", L["{{ i.label }}"]{%- raw -%}},{%- endraw -%}

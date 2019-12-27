@@ -11,7 +11,7 @@ local data = {% raw -%}{{%- endraw -%}{% for k, v in items.items() %}
         {%- endfor -%}{%- raw -%}},{%- endraw %}
         L["{{ v["label"] }}"],
     {%- for i in v["items"] %}
-        {% raw -%}{{%- endraw -%}L["{{ i.name }}"], "{{ i.color }}", L["{{ i.label }}"]{%- raw -%}},{%- endraw -%}
+        {% raw -%}{{%- endraw -%}L["{{ i.name }}"], "{{ i.color }}"{%- raw -%}},{%- endraw -%}
     {% endfor %}
     }{%- if not loop.last %},{% endif %}
     {%- endfor %}

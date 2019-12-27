@@ -7,7 +7,7 @@ from functools import reduce
 from core import create_locale_lua, create_module_lua, get_item_cache, in_cache, add_to_cache, get_from_cache, sleep, write_info, write_error, get_html_data
 from core import PAUSE_MIN, PAUSE_MAX, ID_TO_NAME_KEY, ALL_NAMES_KEY
 
-locale_template_file = 'enUS/mining.lua'
+locale_template_file = 'enUS/base.lua'
 module_template_file = 'Mining.lua'
 
 item_cache = get_item_cache()

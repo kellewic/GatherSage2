@@ -5,10 +5,11 @@ from datetime import datetime
 from functools import reduce
 
 from core import create_locale_lua, create_module_lua, get_item_cache, in_cache, add_to_cache, get_from_cache, sleep, write_info, write_error, get_html_data
-from core import PAUSE_MIN, PAUSE_MAX, ID_TO_NAME_KEY, ALL_NAMES_KEY
+from core import PAUSE_MIN, PAUSE_MAX, ID_TO_NAME_KEY, ALL_NAMES_KEY, MODULE_NAME_KEY, DATA_NAME_KEY
 
+module_name = "Mining"
 locale_template_file = 'enUS/base.lua'
-module_template_file = 'Mining.lua'
+module_template_file = 'Base.lua'
 
 item_cache = get_item_cache()
 
@@ -23,6 +24,8 @@ WH_MINING_NODE_NAME_KEY = "name_enus"
 addon_data = {
     ID_TO_NAME_KEY: {},
     ALL_NAMES_KEY: {},
+    MODULE_NAME_KEY: module_name,
+    DATA_NAME_KEY: {},
 }
 
 html = get_html_data(GUIDE_URL)
@@ -74,7 +77,7 @@ for data in re.findall("\[h3\].*?(?=(?:\[h3\])|$)", object_data):
     for name in node_names:
         addon_data[ALL_NAMES_KEY][name] = True
 
-        addon_data[name] = {
+        addon_data[DATA_NAME_KEY][name] = {
             "skills": skills.split(","),
             "color": "1",
             "label": LABEL,
@@ -107,27 +110,25 @@ for data in re.findall("\[h3\].*?(?=(?:\[h3\])|$)", object_data):
 
                 add_to_cache(item_id, item_data)
 
-                ## Don't hammer wowhead with requests
-                sleep()
-
-            addon_data[name]["items"].append(item_data)
+            addon_data[DATA_NAME_KEY][name]["items"].append(item_data)
 
             item_name = item_data["name"]
             addon_data[ALL_NAMES_KEY][item_name] = True
             write_info("{} {} -> {}={}\n".format(info_label, name, item_name, color))
 
-        sorted_items = sorted(addon_data[name]["items"], key = lambda i: "{}{}".format(i['color'], i['name']))
-        addon_data[name]["items"] = sorted_items
+        ## Don't hammer wowhead with requests
+        sleep()
 
-#        if name == "Tin Vein":
-#            break
-#    if "Tin Vein" in node_names:
-#        break
+        sorted_items = sorted(addon_data[DATA_NAME_KEY][name]["items"], key = lambda i: "{}{}".format(i['color'], i['name']))
+        addon_data[DATA_NAME_KEY][name]["items"] = sorted_items
+
+        if name == "Tin Vein":
+            break
+    if "Tin Vein" in node_names:
+        break
 
 
-create_locale_lua(locale_template_file, addon_data[ALL_NAMES_KEY].keys())
-del addon_data[ID_TO_NAME_KEY]
-del addon_data[ALL_NAMES_KEY]
+create_locale_lua(locale_template_file, addon_data)
 create_module_lua(module_template_file, addon_data)
 
 

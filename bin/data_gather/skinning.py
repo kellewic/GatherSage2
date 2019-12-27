@@ -5,10 +5,11 @@ from datetime import datetime
 from functools import reduce
 
 from core import create_locale_lua, create_module_lua, get_item_cache, in_cache, add_to_cache, get_from_cache, sleep, write_info, write_error, get_html_data
-from core import PAUSE_MIN, PAUSE_MAX, ID_TO_NAME_KEY, ALL_NAMES_KEY
+from core import PAUSE_MIN, PAUSE_MAX, ID_TO_NAME_KEY, ALL_NAMES_KEY, MODULE_NAME_KEY, DATA_NAME_KEY
 
+module_name = "Skinning"
 locale_template_file = 'enUS/base.lua'
-module_template_file = 'Skinning.lua'
+module_template_file = 'Base.lua'
 
 item_cache = get_item_cache()
 
@@ -20,6 +21,8 @@ DATA_URL = "https://classic.wowhead.com/npc={}"
 addon_data = {
     ID_TO_NAME_KEY: {},
     ALL_NAMES_KEY: {},
+    MODULE_NAME_KEY: module_name,
+    DATA_NAME_KEY: {},
 }
 
 url_data = []
@@ -44,7 +47,7 @@ for i in range(1, 7):
             addon_data[ALL_NAMES_KEY][npc_name] = True
             addon_data[ID_TO_NAME_KEY][npc_id] = npc_name
 
-            addon_data[npc_name] = {
+            addon_data[DATA_NAME_KEY][npc_name] = {
                 "skills": ["1", "1", "1", "1"],
                 "color": "1",
                 "label": LABEL,
@@ -72,7 +75,7 @@ for i in range(1, 7):
                 item_name = item["name"]
                 color = item["quality"]
 
-                addon_data[npc_name]["items"].append({
+                addon_data[DATA_NAME_KEY][npc_name]["items"].append({
                     "name": item_name,
                     "color": color,
                     "label": LABEL
@@ -81,12 +84,16 @@ for i in range(1, 7):
                 addon_data[ALL_NAMES_KEY][item_name] = True
                 write_info("{} {} -> {}={}\n".format("Processing", npc_name, item_name, color))
 
+            sorted_items = sorted(addon_data[DATA_NAME_KEY][npc_name]["items"], key = lambda i: "{}{}".format(i['color'], i['name']))
+            addon_data[DATA_NAME_KEY][npc_name]["items"] = sorted_items
+
+            break
+        break
+
     sleep()
 
 
-create_locale_lua(locale_template_file, addon_data[ALL_NAMES_KEY].keys())
-del addon_data[ID_TO_NAME_KEY]
-del addon_data[ALL_NAMES_KEY]
+create_locale_lua(locale_template_file, addon_data)
 create_module_lua(module_template_file, addon_data)
 
 #print(json.dumps(addon_data, indent=3, separators=(',', ':')))

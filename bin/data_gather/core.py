@@ -1,4 +1,4 @@
-import random, requests, sys, time
+import random, re, requests, sys, time
 from datetime import datetime
 from jinja2 import Environment, FileSystemLoader
 
@@ -7,6 +7,8 @@ PAUSE_MAX = 3
 
 ID_TO_NAME_KEY = "__id_to_name"
 ALL_NAMES_KEY = "__all_names"
+MODULE_NAME_KEY = "__module_name"
+DATA_NAME_KEY = "__data"
 
 locales_input_base_dir = 'locales'
 locales_output_base_dir = 'output_locales'
@@ -21,11 +23,24 @@ def get_jinja_env():
 
 def create_locale_lua(template_file, data):
     locale_template = get_jinja_env().get_template("{}/{}".format(locales_input_base_dir, template_file))
-    locale_template.stream(pull_time=datetime.now(), items=sorted(data)).dump("{}/{}".format(locales_output_base_dir, template_file))
+    locale_template.stream(
+        pull_time=datetime.now(),
+        items=sorted(data[ALL_NAMES_KEY].keys())
+    ).dump("{}/{}.lua".format(
+        locales_output_base_dir,
+        re.sub("/.*?\.lua$", "/{}".format(data[MODULE_NAME_KEY].lower()), template_file)
+    ))
 
 def create_module_lua(template_file, data):
     module_template = get_jinja_env().get_template("{}/{}".format(modules_input_base_dir, template_file))
-    module_template.stream(pull_time=datetime.now(), items=data).dump("{}/{}".format(modules_output_base_dir, template_file))
+    module_template.stream(
+        pull_time=datetime.now(), 
+        module_name=data[MODULE_NAME_KEY], 
+        items=data[DATA_NAME_KEY]
+    ).dump("{}/{}".format(
+        modules_output_base_dir, 
+        re.sub(".*?\.lua$", "{}.lua".format(data[MODULE_NAME_KEY]), template_file)
+    ))
 
 def get_item_cache():
     return item_cache

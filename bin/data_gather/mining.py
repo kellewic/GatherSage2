@@ -122,10 +122,10 @@ for data in re.findall("\[h3\].*?(?=(?:\[h3\])|$)", object_data):
         sorted_items = sorted(addon_data[DATA_NAME_KEY][name]["items"], key = lambda i: "{}{}".format(i['color'], i['name']))
         addon_data[DATA_NAME_KEY][name]["items"] = sorted_items
 
-        if name == "Tin Vein":
-            break
-    if "Tin Vein" in node_names:
-        break
+#        if name == "Tin Vein":
+#            break
+#    if "Tin Vein" in node_names:
+#        break
 
 
 create_locale_lua(locale_template_file, addon_data)

@@ -35,7 +35,7 @@ for i in range(1, 7):
     html = get_html_data(url)
     if html is None: continue
 
-    m = re.search("new Listview\(\{template: 'npc', id: 'npcs'.*?data:(\[\{.*\}\])", html)
+    m = re.search("new Listview\(\{.*?\"template\"\s*:\s*\"npc\".*?data\"\s*:(\[\{.*\}\])", html)
 
     if m is not None:
         json_data = json.loads(m.group(1))
@@ -86,9 +86,6 @@ for i in range(1, 7):
 
             sorted_items = sorted(addon_data[DATA_NAME_KEY][npc_name]["items"], key = lambda i: "{}{}".format(i['color'], i['name']))
             addon_data[DATA_NAME_KEY][npc_name]["items"] = sorted_items
-
-            break
-        break
 
     sleep()
 

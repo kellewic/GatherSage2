@@ -1,0 +1,13 @@
+<Ui xmlns="http://www.blizzard.com/wow/ui/"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.blizzard.com/wow/ui/..\FrameXML\UI.xsd">
+
+	<!-- Must be loaded first -->
+	<Script file="base.lua"/>
+    
+	<!-- The order of these doesn't matter -->
+    <Script file="mining.lua"/>
+    <script file="smelting.lua"/>
+    <Script file="herbalism.lua"/>
+	<!--<Script file="skinning.lua"/>-->
+</Ui>

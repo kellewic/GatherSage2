@@ -1,0 +1,56 @@
+-- THIS FILE IS AUTO_GENERATED. DO NOT EDIT. ALL CHANGES WILL BE LOST.
+-- LAST UPDATE FROM https://classic.wowhead.com AT 2020-07-11 04:19:16.572633 UTC
+
+local L = GatherSage2.L
+
+L["Aquamarine"] = true
+L["Arcane Crystal"] = true
+L["Azerothian Diamond"] = true
+L["Black Diamond"] = true
+L["Black Vitriol"] = true
+L["Blood of the Mountain"] = true
+L["Blue Sapphire"] = true
+L["Citrine"] = true
+L["Coarse Stone"] = true
+L["Copper Ore"] = true
+L["Copper Vein"] = true
+L["Dark Iron Deposit"] = true
+L["Dark Iron Ore"] = true
+L["Dense Stone"] = true
+L["Gold Ore"] = true
+L["Gold Vein"] = true
+L["Hakkari Thorium Vein"] = true
+L["Heavy Stone"] = true
+L["Huge Emerald"] = true
+L["Iron Deposit"] = true
+L["Iron Ore"] = true
+L["Jade"] = true
+L["Large Obsidian Chunk"] = true
+L["Large Obsidian Shard"] = true
+L["Large Opal"] = true
+L["Lesser Moonstone"] = true
+L["Malachite"] = true
+L["Mithril Deposit"] = true
+L["Mithril Ore"] = true
+L["Moss Agate"] = true
+L["Ooze Covered Mithril Deposit"] = true
+L["Ooze Covered Rich Thorium Vein"] = true
+L["Ooze Covered Thorium Vein"] = true
+L["Ooze Covered Truesilver Deposit"] = true
+L["Rich Thorium Vein"] = true
+L["Rough Stone"] = true
+L["Shadowgem"] = true
+L["Silver Ore"] = true
+L["Silver Vein"] = true
+L["Small Obsidian Chunk"] = true
+L["Small Obsidian Shard"] = true
+L["Small Thorium Vein"] = true
+L["Solid Stone"] = true
+L["Souldarite"] = true
+L["Star Ruby"] = true
+L["Thorium Ore"] = true
+L["Tigerseye"] = true
+L["Tin Ore"] = true
+L["Tin Vein"] = true
+L["Truesilver Deposit"] = true
+L["Truesilver Ore"] = true

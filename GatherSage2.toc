@@ -1,0 +1,33 @@
+## Interface: 11305
+## Title: GatherSage2
+## Notes: Adds skill-level and item information to gathering tooltips.
+## Version: 20200725
+## Author: kellewic
+## SavedVariables: GatherSage2DB
+
+## X-License: GPLv3
+## X-Curse-Project-ID: 23997
+## X-WoWI-ID: 11828
+
+libs\LibStub\LibStub.lua
+libs\CallbackHandler-1.0\CallbackHandler-1.0.xml
+libs\AceDB-3.0\AceDB-3.0.xml
+libs\AceDBOptions-3.0\AceDBOptions-3.0.xml
+libs\AceGUI-3.0\AceGUI-3.0.xml
+libs\AceConfigRegistry-3.0\AceConfigRegistry-3.0.xml
+libs\AceConfigDialog-3.0\AceConfigDialog-3.0.xml
+libs\GS2_TooltipLib.lua
+
+Addon.lua
+Module.lua
+
+locales\enUS\locale.xml
+locales\deDE\locale.xml
+locales\ruRU\locale.xml
+
+gather_modules\Mining.lua
+gather_modules\Smelting.lua
+gather_modules\Herbalism.lua
+gather_modules\Skinning.lua
+
+Core.lua
